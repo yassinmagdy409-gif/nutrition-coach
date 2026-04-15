@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Nutrition Coach Pro</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: linear-gradient(135deg, #020617, #000);
+  color: white;
+  text-align: center;
+}
+
+.container {
+  max-width: 400px;
+  margin: auto;
+  padding: 20px;
+}
+
+.card {
+  background: #020617;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  transition: transform 0.3s ease;
+}
+
+.card:hover { transform: scale(1.02); }
+
+.bg {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  opacity: 0.6;
+  transition: transform 0.6s ease;
+}
+
+.card:hover .bg { transform: scale(1.1); }
+
+.content {
+  padding: 25px;
+  animation: fadeSlide 0.4s ease;
+}
+
+@keyframes fadeSlide {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #1e3a8a, #2563eb);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+button:hover { transform: scale(1.05); }
+button:active { transform: scale(0.95); }
+
+input {
+  width: 80%;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.log {
+  margin-top: 10px;
+  font-size: 12px;
+  text-align: left;
+  opacity: 0.8;
+}
+</style>
+</head>
+
+<body>
+
+<h2>🍗 Nutrition Coach</h2>
+
+<div class="container">
+  <div id="app" class="card"></div>
+  <div id="log" class="log"></div>
+</div>
+
+<script>
+
+function animateChange(html){
+  const app = document.getElementById("app");
+  app.style.opacity = 0;
+  app.style.transform = "translateY(10px)";
+  setTimeout(() => {
+    app.innerHTML = html;
+    app.style.opacity = 1;
+    app.style.transform = "translateY(0)";
+  }, 150);
+}
+
+// IMAGES (same)
+let images = {
+"Boiled Potatoes":"https://www.fifteenspatulas.com/wp-content/uploads/2011/09/French-Fries.jpg",
+"Eggs":"https://images.pexels.com/photos/162712/egg-white-food-protein-162712.jpeg",
+"Sesame Seeds":"https://images.pexels.com/photos/4198714/pexels-photo-4198714.jpeg",
+"Tomato":"https://images.pexels.com/photos/1327838/pexels-photo-1327838.jpeg",
+"Banana":"https://t3.ftcdn.net/jpg/16/80/92/36/360_F_1680923624_AKehoIRoArQsO8RpgA2Ru3t3sifJXl5b.jpg",
+"Chicken Breast":"https://images.pexels.com/photos/616354/pexels-photo-616354.jpeg",
+"Cucumber":"https://images.pexels.com/photos/2329440/pexels-photo-2329440.jpeg",
+"Brown Rice":"https://images.pexels.com/photos/723198/pexels-photo-723198.jpeg",
+"Milk":"https://images.pexels.com/photos/248412/pexels-photo-248412.jpeg",
+"Greek Yogurt":"https://www.allrecipes.com/thmb/rrlix5pAlyj1yA3SK-ddMlkr7QI=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc():format(webp)/ar-greek-yogurt.jpg",
+"Chia Seeds":"https://images.pexels.com/photos/5938363/pexels-photo-5938363.jpeg"
+};
+
+// FULL MEALS (restored)
+let meals = [
+{meal:"Breakfast", foods:[
+{name:"Boiled Potatoes", g:200, cal:172, p:3.4, c:36.4, f:0.2},
+{name:"Eggs", g:4, cal:273, p:21.8, c:1.6, f:17.6},
+{name:"Sesame Seeds", g:15, cal:95, p:3.1, c:0, f:9.2},
+{name:"Tomato", g:100, cal:18, p:0.9, c:2.7, f:0.2}
+]},
+{meal:"Snack", foods:[{name:"Banana", g:100, cal:89, p:1.1, c:20.2, f:0.3}]},
+{meal:"Mid-Day", foods:[
+{name:"Chicken Breast", g:100, cal:165, p:31, c:0, f:3.6},
+{name:"Cucumber", g:4, cal:100, p:2.4, c:10, f:0}
+]},
+{meal:"Pre-Workout", foods:[{name:"Banana", g:100, cal:89, p:1.1, c:20.2, f:0.3}]},
+{meal:"Post-Workout", foods:[
+{name:"Chicken Breast", g:200, cal:330, p:62, c:0, f:7.2},
+{name:"Brown Rice", g:150, cal:166, p:3.9, c:31.7, f:1.3}
+]},
+{meal:"Snack 1", foods:[
+{name:"Chicken Breast", g:70, cal:96, p:24, c:0, f:0},
+{name:"Milk", g:200, cal:122, p:6.3, c:9.6, f:6.5},
+{name:"Banana", g:100, cal:89, p:1.1, c:20.2, f:0.3}
+]},
+{meal:"Snack 2", foods:[
+{name:"Greek Yogurt", g:80, cal:80, p:6, c:11.5, f:1.4},
+{name:"Chia Seeds", g:10, cal:50, p:1.7, c:7.5, f:3.3}
+]}
+];
+
+// STATE + LOGIC (unchanged)
+function createNewDay(){
+  return { mealIndex:0, foodIndex:0, totals:{cal:0,p:0,c:0,f:0}, log:[] };
+}
+
+let state = createNewDay();
+let showSummary = false;
+let lastMealData = null;
+
+function updateLog(){
+  document.getElementById("log").innerHTML =
+    "<b>Today:</b><br>" + state.log.join("<br>");
+}
+
+function next(){
+
+  updateLog();
+
+  if(showSummary){
+    showSummary = false;
+
+    animateChange(`
+      <div class="content">
+        <h3>${lastMealData.name} Done 🔥</h3>
+        Calories: ${lastMealData.cal.toFixed(0)}<br>
+        Protein: ${lastMealData.p.toFixed(1)}g<br>
+        Carbs: ${lastMealData.c.toFixed(1)}g<br>
+        Fat: ${lastMealData.f.toFixed(1)}g
+        <button onclick="next()">Continue ➡️</button>
+      </div>
+    `);
+    return;
+  }
+
+  if(state.mealIndex >= meals.length){
+    animateChange(`
+      <div class="content">
+        <h3>Day Complete ✅</h3>
+        Calories: ${state.totals.cal.toFixed(0)}<br>
+        Protein: ${state.totals.p.toFixed(1)}g<br>
+        Carbs: ${state.totals.c.toFixed(1)}g<br>
+        Fat: ${state.totals.f.toFixed(1)}g
+        <button onclick="restart()">Start New Day 🔄</button>
+      </div>`);
+    return;
+  }
+
+  let meal = meals[state.mealIndex];
+  let food = meal.foods[state.foodIndex];
+
+  animateChange(`
+    <img class="bg" src="${images[food.name]}">
+    <div class="content">
+      <div>${meal.meal}</div>
+      <h3>Did you eat ${food.g}${food.name=="Eggs"?" eggs":"g"} of ${food.name}?</h3>
+      <button onclick="yes()">Yes</button>
+      <button onclick="no()">No</button>
+    </div>
+  `);
+}
+
+function move(){
+
+  let currentMeal = meals[state.mealIndex];
+  state.foodIndex++;
+
+  if(state.foodIndex >= currentMeal.foods.length){
+
+    let cal=0,p=0,c=0,f=0;
+    for(let x of currentMeal.foods){
+      cal+=x.cal; p+=x.p; c+=x.c; f+=x.f;
+    }
+
+    lastMealData = { name: currentMeal.meal, cal, p, c, f };
+    showSummary = true;
+
+    state.mealIndex++;
+    state.foodIndex = 0;
+
+    next();
+    return;
+  }
+
+  next();
+}
+
+function restart(){ state = createNewDay(); next(); }
+
+function yes(){
+  let f = meals[state.mealIndex].foods[state.foodIndex];
+  state.log.push(`${f.g}${f.name=="Eggs"?" eggs":"g"} ${f.name}`);
+  state.totals.cal += f.cal;
+  state.totals.p += f.p;
+  state.totals.c += f.c;
+  state.totals.f += f.f;
+  move();
+}
+
+function no(){
+  animateChange(`
+    <input id="amount" placeholder="Enter grams">
+    <button onclick="partial()">Go</button>
+  `);
+}
+
+function partial(){
+  let f = meals[state.mealIndex].foods[state.foodIndex];
+  let g = parseFloat(document.getElementById("amount").value)||0;
+  state.log.push(`${g}g ${f.name}`);
+  let r = g / f.g;
+  state.totals.cal += f.cal*r;
+  state.totals.p += f.p*r;
+  state.totals.c += f.c*r;
+  state.totals.f += f.f*r;
+  move();
+}
+
+next();
+
+</script>
+
+</body>
+</html>
